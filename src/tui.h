@@ -1,7 +1,8 @@
-#ifndef UI_H_
-#define UI_H_
+#ifndef TUI_H_
+#define TUI_H_
 
 #include <stdarg.h>
+#include <unistd.h>
 #include <curses.h>
 
 typedef struct {
@@ -26,6 +27,14 @@ typedef enum {
     FLAG_CURSOR_HIGH      = 0x00000016,
 } CursesFlags;
 
+typedef enum {
+    KEY_F1 = 265,
+    KEY_F2 = 266,
+    KEY_F3 = 267,
+    KEY_F4 = 268,
+    KEY_F5 = 269,
+} Keys;
+
 void init_curses(void);
 void close_curses(void);
 void set_target_fps(unsigned int fps);
@@ -34,6 +43,8 @@ void set_config_flags(unsigned int flags);
 
 Vector2 get_cursor_position(void);
 Vector2 get_window_size(void);
+bool is_key_pressed(int key);
+int get_pressed_key(void);
 
 void begin_drawing(void);
 void end_drawing(void);
@@ -49,9 +60,9 @@ void draw_rectangle_rect(Rectangle rect);
 
 void draw_text(int x, int y, const char *fmt, ...);
 
-#endif // UI_H_
+#endif // TUI_H_
 
-#ifdef UI_IMPLEMENTATION
+#ifdef TUI_IMPLEMENTATION
 
 static unsigned int curses_flags = 0x00000000;
 static int exit_key = 113;
@@ -82,7 +93,7 @@ void close_curses(void)
 void set_target_fps(unsigned int fps)
 {
     if (fps < 1) target_fps = 0;
-    else target_fps = (1 / fps) * 1000;
+    else target_fps = 1e+6 / fps;
 }
 
 int curses_should_close(void)
@@ -105,6 +116,16 @@ Vector2 get_window_size(void)
     return (Vector2){getmaxx(stdscr), getmaxy(stdscr)};
 }
 
+bool is_key_pressed(int key)
+{
+    return getch() == key;
+}
+
+int get_pressed_key(void)
+{
+    return getch();
+}
+
 void begin_drawing(void)
 {
     erase();
@@ -113,7 +134,7 @@ void begin_drawing(void)
 void end_drawing(void)
 {
     refresh();
-    timeout(target_fps);
+    usleep(target_fps);
 }
 
 void draw_hline(int x, int y, int width)
@@ -190,4 +211,4 @@ void draw_text(int x, int y, const char *fmt, ...)
     va_end(args);
 }
 
-#endif // UI_IMPLEMENTATION
+#endif // TUI_IMPLEMENTATION
